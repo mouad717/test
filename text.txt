@@ -1,0 +1,28 @@
+| START THE INSTALLATION OF REPOSITORIES AND PACKAGES |
+---> Start Percona repository and Percona database installation? [y/n][n]:
+rpm --quiet -U http://www.percona.com/redir/downloads/percona-release/redhat/latest/percona-release-0.1-3.noarch.rpm >/dev/null 2>&1
+rpm  --quiet -q percona-release
+Installation of Percona 5.6 database:
+yum -y -q install Percona-Server-client-56 Percona-Server-server-56  >/dev/null 2>&1
+rpm  --quiet -q Percona-Server-client-56 Percona-Server-server-56
+DATABASE HAS BEEN INSTALLED  -  OK
+## plug in service status alert
+cp /usr/lib/systemd/system/mysqld.service /etc/systemd/system/mysqld.service
+sed -i "s/^Restart=always/Restart=on-failure/" /etc/systemd/system/mysqld.service
+sed -i "s/^Restart=always/Restart=on-failure/" /etc/systemd/system/mysql.service
+sed -i "/^After.*/a OnFailure=service-status-mail@%n.service" /etc/systemd/system/mysqld.service
+sed -i "/^After.*/a OnFailure=service-status-mail@%n.service" /etc/systemd/system/mysql.service
+sed -i "/Restart=on-failure/a RestartSec=10" /etc/systemd/system/mysqld.service
+sed -i "/Restart=on-failure/a RestartSec=10" /etc/systemd/system/mysql.service
+systemctl daemon-reload
+systemctl enable mysql >/dev/null 2>&1
+Downloading my.cnf file from MagenX Github repository
+wget -qO /etc/my.cnf https://raw.githubusercontent.com/magenx/magento-mysql/master/my.cnf/my.cnf
+We need to correct your innodb_buffer_pool_size
+rpm -qa | grep -qw bc || yum -q -y install bc >/dev/null 2>&1
+IBPS=0
+sed -i "s/innodb_buffer_pool_size = 4G/innodb_buffer_pool_size = 2G/" /etc/my.cnf
+sed -i "s/innodb_buffer_pool_instances = 4/innodb_buffer_pool_instances = 2/" /etc/my.cnf
+innodb_buffer_pool_size = 2G
+innodb_buffer_pool_instances = 2
+## get mysql tools
